@@ -1,0 +1,229 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ee.omnifish</groupId>
+    <artifactId>javax-jakarta-transform-individual-deps</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+    
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <failOnMissingWebXml>false</failOnMissingWebXml>
+        <jakartaee>10.0.0</jakartaee>
+    </properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-api</artifactId>
+            <version>${jakartaee}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- dependencies compatible with Jakarta EE 9+ -->
+        <dependency>
+            <groupId>org.primefaces</groupId>
+            <artifactId>primefaces</artifactId>
+            <version>12.0.0</version>
+            <classifier>jakarta</classifier>
+        </dependency>
+
+        <!-- dependencies transformed from javax to jakarta during build -->        
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+            <version>6.20.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>2.3.2</version>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <!-- Remove original untransformed artifacts from the WAR directory. Should run before the transformer's plugin "wardir" execution -->
+                        <id>remove-javax-jars</id>
+                        <phase>package</phase>
+                        <configuration>
+ 
+                            <target>
+                                <delete>
+                                    <!-- delete from WAR webappDirectory -->
+                                    <fileset dir="${project.build.directory}/${project.build.finalName}"
+                                             includes="WEB-INF/lib/jasperreports*.jar,WEB-INF/lib/quartz*.jar">
+                                    </fileset>
+                                </delete>
+                            </target>
+ 
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- see https://github.com/eclipse/transformer for details -->
+                <groupId>org.eclipse.transformer</groupId>
+                <artifactId>transformer-maven-plugin</artifactId>
+                <version>0.5.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <rules>
+                        <jakartaDefaults>true</jakartaDefaults>
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jasperreports</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <!-- run before the war plugin -->
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <!-- don't attach artifact, just use it in the build -->
+                            <attach>false</attach>
+                            <!-- prepare all he transformed JARs in a separate directory 
+                            to add to WAR as a web-resource with the WAR plugin -->
+                            <buildDirectory>${project.build.directory}/transformed</buildDirectory>
+                            <artifact>
+                                <groupId>net.sf.jasperreports</groupId>
+                                <artifactId>jasperreports</artifactId>
+                                <!-- version defined in the dependency or dependency management -->
+                                <!-- type jar is necessary because the default 'war' type
+                                is derived from the project type -->
+                                <type>jar</type>
+                            </artifact>
+                            <!-- baseName necessary because the default is derived from the project artifact.
+                            We add jakarta prefix to distinguish easily from the original JAR, 
+                            which will be excluded by the WAR plugin -->
+                            <baseName>jakarta-jasperreports</baseName>
+                            <!-- type jar is necessary because the default 'war' type
+                            is derived from the project type -->
+                            <type>jar</type>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>quartz</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>prepare-package</phase>
+                        <configuration>
+                            <attach>false</attach>
+                            <buildDirectory>${project.build.directory}/transformed</buildDirectory>
+                            <artifact>
+                                <groupId>org.quartz-scheduler</groupId>
+                                <artifactId>quartz</artifactId>
+                                <type>jar</type>
+                            </artifact>
+                            <baseName>jakarta-quartz</baseName>
+                            <type>jar</type>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- This transforms the final WAR artifact just in case there's still 
+                        something left that's not compatible with Jakarta EE 9+ -->
+                        <id>war</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <artifact>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>${project.artifactId}</artifactId>
+                            </artifact>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- This transforms the final webapp directory just in case there's still 
+                        something left that's not compatible with Jakarta EE 9+ -->
+                        <id>wardir</id>
+                        <!-- execute after WAR directory is created by the WAR plugin -->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>transform</goal>
+                        </goals>
+                        <configuration>
+                            <transformDirectory>${project.build.directory}/${project.build.finalName}</transformDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>        
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <webResources>
+                        <resource>
+                            <directory>${project.build.directory}/transformed</directory>
+                            <targetPath>WEB-INF/lib</targetPath>
+                        </resource>
+                    </webResources>
+                    <!-- This will remove the original JARs from the WAR file. But not from the webappDirectory. 
+                    To remove it from there, we have to execute the ant remove-javax-jars execution 
+                    right after the WAR plugin -->
+                    <packagingExcludes>WEB-INF/lib/jasperreports*.jar,WEB-INF/lib/quartz*.jar</packagingExcludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <!-- Use this plugin to find invalid javax-related dependencies -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-banned-dependencies</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedDependencies>
+                                    <excludes>
+                                        <!-- Force switching to Jakarta EE -->
+                                        <exclude>javax.*</exclude>
+                                        <!-- already on application server or servlet container -->
+                                        <exclude>jakarta.servlet:jakarta.servlet-api:*</exclude>
+                                        <exclude>jakarta.servlet.jsp:jakarta.servlet.jsp-api:*</exclude>
+                                        <!-- replaced by jakarta -->
+                                        <exclude>com.sun.mail</exclude>
+                                        <exclude>com.sun.xml.bind</exclude>
+                                    </excludes>
+                                    <includes>
+                                        <!-- Jakarta API are allowed to be provided -->
+                                        <include>jakarta.*:*:jar:*:provided</include>
+                                        <!-- Not yet migrated to Jakarta -->
+                                        <include>javax.cache:*</include>
+                                    </includes>
+                                </bannedDependencies>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
