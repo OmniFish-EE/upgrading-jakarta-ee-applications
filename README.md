@@ -8,11 +8,32 @@ Applications in this repository provide examples of how to deal with the challen
 * [javax-jakarta-transform-individual-deps](javax-jakarta-transform-individual-deps) - an example how to transform dependencies during the build of your application
 
 
-## Challenges related to renaming package prefixes from `javax.` to `jakarta.`
+## Renaming package prefixes from `javax.` to `jakarta.` (upgrading from Jakarta EE 8 to 9 or newer)
+
+Challenges:
 
 * Application source code depends on Java EE APIs (with `javax.` prefix)
 * Application resources (XML descriptors, service locator files) reference Java EE API elements (with `javax.` prefix)
 * Application dependencies depend on Java EE APIs (with `javax.` prefix)
+
+## Upgrading to Jakarta EE 10
+
+Challenges:
+
+Some obsolete APIs were dropped in favor of newer APIs that already exist in Jakarta EE 8 or older. It's pretty straightforward to migrate from the dropped APIs to the alternative ones though.
+
+When migrating from Jakarta EE 8:
+
+* replace annotation `javax.faces.bean.ApplicationScoped` with `javax.enterprise.context.ApplicationScoped`
+* replace annotation `javax.faces.bean.ViewScoped` with `javax.faces.view.ViewScoped` and implement `java.io.Serializable` in the related class
+* replace annotation `javax.faces.bean.SessionScoped` with `javax.enterprise.context.SessionScoped` and implement `java.io.Serializable` in the related class
+* replace annotation `javax.faces.bean.NoneScoped` with `javax.enterprise.context.Dependent`
+* replace annotation `javax.faces.bean.RequestScoped` with `javax.enterprise.context.RequestScoped`
+* replace annotation `javax.faces.bean.ManagedBean` on a class with `javax.inject.Name`. if there's no scope annotation, add `javax.enterprise.context.RequestScoped`. If `@ManagedBean(eager=true)`, use the `@javax.enterprise.context.ApplicationScoped` scope and add an observer method like `public void init(@Observes @Initialized(ApplicationScoped.class) Object event) {}` to initialize the bean at applicaiton startup eagerly
+
+Then continue the migration from Jakarta EE 8 to Jakarta EE 10.
+
+When migrating from Jakarta EE 9, do the same changes but with the `jakarta.` prefix in package names instead of `javax.` prefixes and the result should be compatible with Jakarta EE 10.
 
 ## Techniques to address the challenges related to renaming package prefixes
 
