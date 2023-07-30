@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>ee.omnifish.transformed</groupId>
+  <artifactId>transform-dependencies</artifactId>
+  <name>EE10 separate deps - transform dependencies</name>
+  <version>1.0-SNAPSHOT</version>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <shadedClassifierName>jakarta</shadedClassifierName>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <transformers>
+                <transformer />
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.transformer</groupId>
+        <artifactId>transformer-maven-plugin</artifactId>
+        <version>0.5.0</version>
+        <executions>
+          <execution>
+            <id>jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <rules>
+            <jakartaDefaults>true</jakartaDefaults>
+          </rules>
+          <artifact>
+            <groupId>ee.omnifish.transformed</groupId>
+            <artifactId>transform-dependencies</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <classifier>jakarta</classifier>
+          </artifact>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <properties>
+    <shadedjar.directory>${project.build.directory}/shaded</shadedjar.directory>
+    <shadedjar.file>${shadedjar.directory}/WEB-INF/lib/transform-dependencies-shaded.jar</shadedjar.file>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+</project>

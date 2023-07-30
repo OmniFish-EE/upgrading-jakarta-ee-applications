@@ -2,24 +2,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>ee.omnifish</groupId>
-    <artifactId>javax-jakarta-transform-whole-war</artifactId>
+    <artifactId>jakarta-app</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
-
-    <name>EE10 whole war</name>
+    <name>EE10 separate shaded deps - main application</name>
+    
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <failOnMissingWebXml>false</failOnMissingWebXml>
-        <jakartaee>8.0.0</jakartaee>
-        
-        <!-- set to true to make the build faster if you don't deploy the final WAR file, e.g. in development -->
-        <transform.war.skip>false</transform.war.skip>
-        <!-- set to true to make the build faster if you don't deploy the exploded WAR file but you deploy the WR file itself -->
-        <transform.wardir.skip>false</transform.wardir.skip>
+        <jakartaee>10.0.0</jakartaee>
     </properties>
-
+    
     <dependencies>
         <dependency>
             <groupId>jakarta.platform</groupId>
@@ -36,27 +31,17 @@
             <classifier>jakarta</classifier>
         </dependency>
 
+        <!-- Dependencies not compatible with EE 9+ transformed in the transform-dependencies module into a shaded Uber JAR.
+             We use the jakarta classifier to refer to the Uber JAR, while the main artifact isn't transformed.
+        -->
         <dependency>
-            <groupId>org.omnifaces</groupId>
-            <artifactId>omnifaces</artifactId>
-            <version>4.1</version>
+            <groupId>ee.omnifish.transformed</groupId>
+            <artifactId>transform-dependencies</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <classifier>jakarta</classifier>
         </dependency>
-
-        <!-- dependencies not compatible with Jakarta EE 9+
-        - will be transformed in the final WAR file and WAR directory -->
-        <dependency>
-            <groupId>net.sf.jasperreports</groupId>
-            <artifactId>jasperreports</artifactId>
-            <version>6.20.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.quartz-scheduler</groupId>
-            <artifactId>quartz</artifactId>
-            <version>2.3.2</version>
-        </dependency>
-
     </dependencies>
-
+    
     <build>
         <plugins>
             <plugin>
@@ -72,55 +57,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.3.2</version>
-                <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                </configuration>
             </plugin>
             <plugin>
-                <!-- see https://github.com/eclipse/transformer for details -->
-                <groupId>org.eclipse.transformer</groupId>
-                <artifactId>transformer-maven-plugin</artifactId>
-                <version>0.5.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <rules>
-                        <jakartaDefaults>true</jakartaDefaults>
-                    </rules>
-                </configuration>
-                <executions>
-                    <execution>
-                        <!-- This transforms the final WAR artifact just in case there's still
-                        something left that's not compatible with Jakarta EE 9+ -->
-                        <id>war</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${transform.war.skip}</skip>
-                            <artifact>
-                                <groupId>${project.groupId}</groupId>
-                                <artifactId>${project.artifactId}</artifactId>
-                            </artifact>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- This transforms the final webapp directory just in case there's still
-                        something left that's not compatible with Jakarta EE 9+ -->
-                        <id>wardir</id>
-                        <!-- execute after WAR directory is created by the WAR plugin -->
-                        <phase>package</phase>
-                        <goals>
-                            <goal>transform</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${transform.wardir.skip}</skip>
-                            <transformDirectory>${project.build.directory}/${project.build.finalName}</transformDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <!-- Use this plugin to find invalid javax-related dependencies - optional -->
+                <!-- Use this plugin to find invalid javax-related dependencies -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>3.2.1</version>

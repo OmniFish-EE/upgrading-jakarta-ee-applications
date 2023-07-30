@@ -6,6 +6,7 @@ Applications in this repository provide examples of how to deal with the challen
 
 * [javax-jakarta-transform-whole-war](javax-jakarta-transform-whole-war) - transform the final WAR artifact to be compatible with Jakarta EE 9+
 * [javax-jakarta-transform-individual-deps](javax-jakarta-transform-individual-deps) - an example how to transform dependencies during the build of your application
+* [javax-jakarta-transform-dependencies-uberjar](javax-jakarta-transform-dependencies-uberjar) - an example of how to transform dependencies separately, only once, into an Uber JAR compatible with Jakarta EE 9. Transforms all dependencies into a single JAR, which is used as a single dependency in the main application. No need to transform again during each build of the main application. Uber JAR is needed to transform all the transitive dependencies.
 
 
 ## Renaming package prefixes from `javax.` to `jakarta.` (upgrading from Jakarta EE 8 to 9 or newer)
