@@ -42,6 +42,7 @@
                         <configuration>
                             <shadedClassifierName>jakarta</shadedClassifierName>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
@@ -70,9 +71,8 @@
                         <jakartaDefaults>true</jakartaDefaults>
                     </rules>
                     <artifact>
-                        <groupId>ee.omnifish.transformed</groupId>
-                        <artifactId>transform-dependencies</artifactId>
-                        <version>1.0-SNAPSHOT</version>
+                        <groupId>${project.groupId}</groupId>
+                        <artifactId>${project.artifactId}</artifactId>
                         <classifier>jakarta</classifier>
                     </artifact>
                 </configuration>
