@@ -82,33 +82,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>3.3.2</version>
-                <executions>
-                    <execution>
-                        <id>exploded</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>exploded</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                    <webResources>
-                        <resource>
-                            <directory>${project.build.directory}/transformed</directory>
-                            <targetPath>WEB-INF/lib</targetPath>
-                        </resource>
-                    </webResources>
-                    <!-- This will remove the original JARs from the WAR file. But not from the webappDirectory.
-                    To remove it from there, we have to execute the ant remove-javax-jars execution
-                    right after the WAR plugin -->
-                    <packagingExcludes>WEB-INF/lib/jasperreports*.jar,WEB-INF/lib/quartz*.jar</packagingExcludes>
-                </configuration>
-            </plugin>
-            <plugin>
                 <!-- see https://github.com/eclipse/transformer for details -->
                 <groupId>org.eclipse.transformer</groupId>
                 <artifactId>transformer-maven-plugin</artifactId>
@@ -172,6 +145,7 @@
                         <!-- This transforms the final WAR artifact just in case there's still 
                         something left that's not compatible with Jakarta EE 9+ -->
                         <id>war</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -187,7 +161,7 @@
                         something left that's not compatible with Jakarta EE 9+ -->
                         <id>wardir</id>
                         <!-- execute after WAR directory is created by the WAR plugin -->
-                        <phase>prepare-package</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>transform</goal>
                         </goals>
@@ -197,6 +171,33 @@
                     </execution>
                 </executions>
             </plugin>        
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <executions>
+                    <execution>
+                        <id>exploded</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>exploded</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                    <webResources>
+                        <resource>
+                            <directory>${project.build.directory}/transformed</directory>
+                            <targetPath>WEB-INF/lib</targetPath>
+                        </resource>
+                    </webResources>
+                    <!-- This will remove the original JARs from the WAR file. But not from the webappDirectory.
+                    To remove it from there, we have to execute the ant remove-javax-jars execution
+                    right after the WAR plugin -->
+                    <packagingExcludes>WEB-INF/lib/jasperreports*.jar,WEB-INF/lib/quartz*.jar</packagingExcludes>
+                </configuration>
+            </plugin>
             <plugin>
                 <!-- Use this plugin to find invalid javax-related dependencies -->
                 <groupId>org.apache.maven.plugins</groupId>
